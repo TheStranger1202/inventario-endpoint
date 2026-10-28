@@ -38,7 +38,7 @@ when defined(windows):
     """
 
     try:
-      let cmd = "powershell -NoProfile -ExecutionPolicy Bypass -Command \"" & psCommand.replace("\"", "\\\"").replace("\n", " ") & "\""
+      let cmd = "powershell -NoProfile -NoLogo -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command \"" & psCommand.replace("\"", "\\\"").replace("\n", " ") & "\""
       let (salida, exitCode) = execCmdEx(cmd)
       if exitCode == 0 and salida.strip().startsWith("{"):
         return salida.strip()
@@ -46,7 +46,6 @@ when defined(windows):
     except Exception:
       return ""
 else:
-  # Mock de seguridad para permitir compilar y testear la GUI en Linux/macOS sin que rompa el build
   proc ejecutarScriptPowershell(): string =
     return "{}"
 
@@ -70,6 +69,6 @@ proc recolectarDatos*(): EquipoInfo =
     except JsonParsingError:
       info.hostname = "Error en formato de datos"
   else:
-    info.hostname = "Error al consultar sistema / SO no compatible"
+    info.hostname = "Error al consultar sistema / SO no compat:"
 
   return info

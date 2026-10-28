@@ -16,16 +16,17 @@ const
 proc renderizarGUI*(info: EquipoInfo) =
   app.init()
   
-  # Tipografía global (Retro Consola) sin constructores inestables
   app.defaultFontFamily = "Consolas"
 
-  # 1. Ventana Principal (Evitando la propiedad inexistente 'color')
+  # 1. Ventana Principal
   var ventana = newWindow("[ ENDPOINT INVENTORY // CYBER-COLLECTOR ]")
   ventana.width = 760
   ventana.height = 680
 
-  # 2. Contenedor Principal (Fondo base aplicado aquí)
+  # 2. Contenedor Principal
   var layoutMain = newLayoutContainer(Layout_Vertical)
+  layoutMain.widthMode = WidthMode_Fill   # Forzar ancho completo
+  layoutMain.heightMode = HeightMode_Fill # Forzar alto completo
   layoutMain.spacing = 15
   layoutMain.padding = 20
   layoutMain.backgroundColor = COLOR_BG 
@@ -33,23 +34,27 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   # 3. Header
   var lblHeader = newLabel(" ─── [ SYSTEM METRICS & ENDPOINT AUDIT ] ─── ")
+  lblHeader.widthMode = WidthMode_Fill
   lblHeader.textColor = COLOR_PURPLE
   lblHeader.backgroundColor = COLOR_BG
   layoutMain.add(lblHeader)
 
   # 4. Sección Hardware (Solo Lectura)
   var panelHardware = newLayoutContainer(Layout_Vertical)
+  panelHardware.widthMode = WidthMode_Fill
   panelHardware.spacing = 6
   panelHardware.padding = 10
   panelHardware.backgroundColor = COLOR_BG
 
   var lblHWTitle = newLabel(">> DETECTED HARDWARE [READ-ONLY]")
+  lblHWTitle.widthMode = WidthMode_Fill
   lblHWTitle.textColor = COLOR_CYAN
   lblHWTitle.backgroundColor = COLOR_BG
   panelHardware.add(lblHWTitle)
 
   proc addMetric(parent: LayoutContainer, text: string) =
     var lbl = newLabel(text)
+    lbl.widthMode = WidthMode_Fill # Evita que el texto se trunque
     lbl.textColor = COLOR_TEXT
     lbl.backgroundColor = COLOR_BG
     parent.add(lbl)
@@ -62,6 +67,7 @@ proc renderizarGUI*(info: EquipoInfo) =
   addMetric(panelHardware, " [Network]    : IP " & info.direccionIP & " | MAC " & info.direccionMAC)
   
   var lblSec = newLabel(" [Security]   : " & info.antivirusEstado)
+  lblSec.widthMode = WidthMode_Fill
   lblSec.textColor = COLOR_GREEN
   lblSec.backgroundColor = COLOR_BG
   panelHardware.add(lblSec)
@@ -70,17 +76,20 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   # 5. Sección Formulario Manual
   var panelForm = newLayoutContainer(Layout_Vertical)
+  panelForm.widthMode = WidthMode_Fill
   panelForm.spacing = 8
   panelForm.padding = 10
   panelForm.backgroundColor = COLOR_BG
 
   var lblFormTitle = newLabel(">> MANUAL REGISTRATION [INPUT REQUIRED]")
+  lblFormTitle.widthMode = WidthMode_Fill
   lblFormTitle.textColor = COLOR_PINK
   lblFormTitle.backgroundColor = COLOR_BG
   panelForm.add(lblFormTitle)
 
   proc addInput(parent: LayoutContainer, placeholder: string): TextBox =
     var txt = newTextBox()
+    txt.widthMode = WidthMode_Fill # Forzar que los inputs llenen la fila
     txt.placeholder = placeholder
     txt.textColor = COLOR_TEXT
     txt.backgroundColor = COLOR_BG
@@ -95,12 +104,14 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   # Indicador de estado para validación
   var lblStatus = newLabel(" STATUS: WAITING FOR INPUT...")
+  lblStatus.widthMode = WidthMode_Fill
   lblStatus.textColor = COLOR_CYAN
   lblStatus.backgroundColor = COLOR_BG
   layoutMain.add(lblStatus)
 
   # 6. Botón de Acción y Lógica de Persistencia JSON
   var btnGuardar = newButton("[ EXECUTE REGISTRATION ]")
+  btnGuardar.widthMode = WidthMode_Fill
   btnGuardar.textColor = COLOR_BG
   btnGuardar.backgroundColor = COLOR_GREEN
 
@@ -114,7 +125,6 @@ proc renderizarGUI*(info: EquipoInfo) =
       lblStatus.textColor = COLOR_RED
     else:
       try:
-        # Generación del archivo JSON de respaldo
         let payload = %*{
           "timestamp": now().format("yyyy-MM-dd HH:mm:ss"),
           "hardware": {
