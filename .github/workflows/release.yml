@@ -31,7 +31,7 @@ jobs:
 
       - name: Compilar binario de Windows (Release Standalone)
         run: |
-          nim c -d:danger --opt:speed --app:gui -o:inventario_endpoint.exe src/inventario_endpoint.nim
+          nim c -d:danger --opt:speed --passL:-mwindows -o:inventario_endpoint.exe src/inventario_endpoint.nim
 
       - name: Publicar Release en GitHub
         uses: softprops/action-gh-release@v2
@@ -44,7 +44,7 @@ jobs:
             
             ### ✨ Características del Release:
             - **Consulta Atómica:** Extracción de hardware, red y seguridad vía clases CIM/WMI de Windows en proceso único.
-            - **Interfaz Grafica Cyberpunk/Dracula:** Construida en Nim puro (`NiGui`) sin runtimes ni DLLs externas.
+            - **Interfaz Gráfica Cyberpunk/Dracula:** Construida en Nim puro (`NiGui`) sin runtimes ni DLLs externas.
             - **Portabilidad:** Binario ejecutable único (`.exe`) diseñado para entornos corporativos restringidos.
             
             ### 📦 Instrucciones de Ejecución:
