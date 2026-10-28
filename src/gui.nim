@@ -14,22 +14,6 @@ const
   COLOR_PINK    = rgb(255, 121, 198)  # Accent Pink (#ff79c6)
   COLOR_RED     = rgb(255, 85, 85)    # Dracula Red (#ff5555)
 
-proc agregarFilaKV(parent: LayoutContainer, key: string, val: string, valColor: Color) =
-  var layoutFila = newLayoutH()
-  layoutFila.spacing = 10
-
-  var lblKey = newLabel(key)
-  lblKey.textColor = COLOR_CYAN
-  lblKey.font = newFont("Consolas", 10, true)
-
-  var lblVal = newLabel(val)
-  lblVal.textColor = valColor
-  lblVal.font = newFont("Consolas", 10, false)
-
-  layoutFila.add(lblKey)
-  layoutFila.add(lblVal)
-  parent.add(layoutFila)
-
 proc renderizarGUI*(info: EquipoInfo) =
   app.init()
 
@@ -43,9 +27,9 @@ proc renderizarGUI*(info: EquipoInfo) =
   ventana.height = 600
   ventana.color = COLOR_BG
 
-  # 2. Contenedor Principal
-  var layoutMain = newLayoutV()
-  layoutMain.spacing = 14
+  # 2. Contenedor Principal (Layout Vertical)
+  var layoutMain = newLayoutContainer(LayoutDirection.Vertical)
+  layoutMain.spacing = 12
   layoutMain.padding = 16
   ventana.add(layoutMain)
 
@@ -55,8 +39,8 @@ proc renderizarGUI*(info: EquipoInfo) =
   lblHeader.font = fontHeader
   layoutMain.add(lblHeader)
 
-  # 4. Sección Hardware
-  var panelHardware = newLayoutV()
+  # 4. Sección Hardware (Solo Lectura)
+  var panelHardware = newLayoutContainer(LayoutDirection.Vertical)
   panelHardware.spacing = 4
 
   var lblHWTitle = newLabel(">> DETECTED HARDWARE [READ-ONLY]")
@@ -64,18 +48,46 @@ proc renderizarGUI*(info: EquipoInfo) =
   lblHWTitle.font = fontSection
   panelHardware.add(lblHWTitle)
 
-  panelHardware.agregarFilaKV(" [Hostname]   :", info.hostname, COLOR_TEXT)
-  panelHardware.agregarFilaKV(" [OS Version] :", info.soNombre & " (" & info.soVersion & ")", COLOR_TEXT)
-  panelHardware.agregarFilaKV(" [Hardware]   :", info.marcaModelo, COLOR_TEXT)
-  panelHardware.agregarFilaKV(" [Processor]  :", info.procesador, COLOR_TEXT)
-  panelHardware.agregarFilaKV(" [Memory/DSK] :", info.ramGB & " RAM | " & info.almacenamiento & " Disk", COLOR_TEXT)
-  panelHardware.agregarFilaKV(" [Network]    :", "IP: " & info.direccionIP & " | MAC: " & info.direccionMAC, COLOR_TEXT)
-  panelHardware.agregarFilaKV(" [Security]   :", info.antivirusEstado, COLOR_GREEN)
+  # Métricas recolectadas
+  var lblHost = newLabel(" [Hostname]   : " & info.hostname)
+  lblHost.textColor = COLOR_TEXT
+  lblHost.font = fontVal
+  panelHardware.add(lblHost)
+
+  var lblOS = newLabel(" [OS Version] : " & info.soNombre & " (" & info.soVersion & ")")
+  lblOS.textColor = COLOR_TEXT
+  lblOS.font = fontVal
+  panelHardware.add(lblOS)
+
+  var lblHW = newLabel(" [Hardware]   : " & info.marcaModelo)
+  lblHW.textColor = COLOR_TEXT
+  lblHW.font = fontVal
+  panelHardware.add(lblHW)
+
+  var lblCPU = newLabel(" [Processor]  : " & info.procesador)
+  lblCPU.textColor = COLOR_TEXT
+  lblCPU.font = fontVal
+  panelHardware.add(lblCPU)
+
+  var lblRAM = newLabel(" [Memory/DSK] : " & info.ramGB & " RAM | " & info.almacenamiento & " Disk")
+  lblRAM.textColor = COLOR_TEXT
+  lblRAM.font = fontVal
+  panelHardware.add(lblRAM)
+
+  var lblNet = newLabel(" [Network]    : IP " & info.direccionIP & " | MAC " & info.direccionMAC)
+  lblNet.textColor = COLOR_TEXT
+  lblNet.font = fontVal
+  panelHardware.add(lblNet)
+
+  var lblSec = newLabel(" [Security]   : " & info.antivirusEstado)
+  lblSec.textColor = COLOR_GREEN
+  lblSec.font = fontVal
+  panelHardware.add(lblSec)
 
   layoutMain.add(panelHardware)
 
-  # 5. Sección Formulario
-  var panelForm = newLayoutV()
+  # 5. Sección Formulario Manual
+  var panelForm = newLayoutContainer(LayoutDirection.Vertical)
   panelForm.spacing = 6
 
   var lblFormTitle = newLabel(">> MANUAL REGISTRATION [INPUT REQUIRED]")
@@ -100,7 +112,7 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   layoutMain.add(panelForm)
 
-  # Indicador visual de estado
+  # Indicador de estado para validación
   var lblStatus = newLabel(" ")
   lblStatus.font = fontVal
   layoutMain.add(lblStatus)
