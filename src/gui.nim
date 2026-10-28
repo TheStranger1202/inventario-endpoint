@@ -1,5 +1,3 @@
-# src/gui.nim
-
 import std/strutils
 import nigui
 import config
@@ -17,20 +15,19 @@ const
 proc renderizarGUI*(info: EquipoInfo) =
   app.init()
   
-  # Asignación global de fuente monoespaciada segura en NiGui
   app.defaultFontFamily = "Consolas"
 
   # 1. Ventana Principal
   var ventana = newWindow("[ ENDPOINT INVENTORY // CYBER-COLLECTOR ]")
   ventana.width = 760
   ventana.height = 640
-  ventana.color = COLOR_BG
+  # ELIMINADO: ventana.color = COLOR_BG (Window no tiene esta propiedad)
 
   # 2. Contenedor Principal
   var layoutMain = newLayoutContainer(Layout_Vertical)
   layoutMain.spacing = 15
   layoutMain.padding = 20
-  layoutMain.backgroundColor = COLOR_BG
+  layoutMain.backgroundColor = COLOR_BG # El color base se aplica aquí al contenedor principal
   ventana.add(layoutMain)
 
   # 3. Header
@@ -50,7 +47,6 @@ proc renderizarGUI*(info: EquipoInfo) =
   lblHWTitle.backgroundColor = COLOR_PANEL
   panelHardware.add(lblHWTitle)
 
-  # Función auxiliar para filas de lectura nativas (sin fuentes externas)
   proc addMetric(parent: LayoutContainer, text: string, color: Color = COLOR_TEXT) =
     var lbl = newLabel(text)
     lbl.textColor = color
@@ -110,7 +106,6 @@ proc renderizarGUI*(info: EquipoInfo) =
     else:
       lblStatus.text = " [OK] DATA SECURED. INVENTORY UPDATED."
       lblStatus.textColor = COLOR_GREEN
-      # Opcional: Mostrar popup nativo de confirmación
       ventana.msgBox("Registro de " & inputResponsable.text & " guardado correctamente.", "CYBER-COLLECTOR")
 
   layoutMain.add(btnGuardar)
