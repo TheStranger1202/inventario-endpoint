@@ -4,9 +4,9 @@ import std/strutils
 import nigui
 import config
 
-# Paleta Dracula / Cyberpunk / Retro
 const
   COLOR_BG      = rgb(40, 42, 54)     # Dracula Dark (#282a36)
+  COLOR_PANEL   = rgb(68, 71, 90)     # Panels/Containers (#44475a)
   COLOR_TEXT    = rgb(248, 248, 242)  # Foreground Text (#f8f8f2)
   COLOR_PURPLE  = rgb(189, 147, 249)  # Cyberpunk Purple (#bd93f9)
   COLOR_CYAN    = rgb(139, 233, 253)  # Retro Cyan (#8be9fd)
@@ -16,110 +16,90 @@ const
 
 proc renderizarGUI*(info: EquipoInfo) =
   app.init()
-
-  let fontHeader  = newFont("Consolas", 13, true)
-  let fontSection = newFont("Consolas", 11, true)
-  let fontVal     = newFont("Consolas", 10, false)
+  
+  # Asignación global de fuente monoespaciada segura en NiGui
+  app.defaultFontFamily = "Consolas"
 
   # 1. Ventana Principal
   var ventana = newWindow("[ ENDPOINT INVENTORY // CYBER-COLLECTOR ]")
   ventana.width = 760
-  ventana.height = 600
+  ventana.height = 640
   ventana.color = COLOR_BG
 
-  # 2. Contenedor Principal (Layout Vertical)
-  var layoutMain = newLayoutContainer(LayoutDirection.Vertical)
-  layoutMain.spacing = 12
-  layoutMain.padding = 16
+  # 2. Contenedor Principal
+  var layoutMain = newLayoutContainer(Layout_Vertical)
+  layoutMain.spacing = 15
+  layoutMain.padding = 20
+  layoutMain.backgroundColor = COLOR_BG
   ventana.add(layoutMain)
 
   # 3. Header
   var lblHeader = newLabel(" ─── [ SYSTEM METRICS & ENDPOINT AUDIT ] ─── ")
   lblHeader.textColor = COLOR_PURPLE
-  lblHeader.font = fontHeader
+  lblHeader.backgroundColor = COLOR_BG
   layoutMain.add(lblHeader)
 
   # 4. Sección Hardware (Solo Lectura)
-  var panelHardware = newLayoutContainer(LayoutDirection.Vertical)
-  panelHardware.spacing = 4
+  var panelHardware = newLayoutContainer(Layout_Vertical)
+  panelHardware.spacing = 6
+  panelHardware.padding = 10
+  panelHardware.backgroundColor = COLOR_PANEL
 
   var lblHWTitle = newLabel(">> DETECTED HARDWARE [READ-ONLY]")
   lblHWTitle.textColor = COLOR_CYAN
-  lblHWTitle.font = fontSection
+  lblHWTitle.backgroundColor = COLOR_PANEL
   panelHardware.add(lblHWTitle)
 
-  # Métricas recolectadas
-  var lblHost = newLabel(" [Hostname]   : " & info.hostname)
-  lblHost.textColor = COLOR_TEXT
-  lblHost.font = fontVal
-  panelHardware.add(lblHost)
+  # Función auxiliar para filas de lectura nativas (sin fuentes externas)
+  proc addMetric(parent: LayoutContainer, text: string, color: Color = COLOR_TEXT) =
+    var lbl = newLabel(text)
+    lbl.textColor = color
+    lbl.backgroundColor = COLOR_PANEL
+    parent.add(lbl)
 
-  var lblOS = newLabel(" [OS Version] : " & info.soNombre & " (" & info.soVersion & ")")
-  lblOS.textColor = COLOR_TEXT
-  lblOS.font = fontVal
-  panelHardware.add(lblOS)
-
-  var lblHW = newLabel(" [Hardware]   : " & info.marcaModelo)
-  lblHW.textColor = COLOR_TEXT
-  lblHW.font = fontVal
-  panelHardware.add(lblHW)
-
-  var lblCPU = newLabel(" [Processor]  : " & info.procesador)
-  lblCPU.textColor = COLOR_TEXT
-  lblCPU.font = fontVal
-  panelHardware.add(lblCPU)
-
-  var lblRAM = newLabel(" [Memory/DSK] : " & info.ramGB & " RAM | " & info.almacenamiento & " Disk")
-  lblRAM.textColor = COLOR_TEXT
-  lblRAM.font = fontVal
-  panelHardware.add(lblRAM)
-
-  var lblNet = newLabel(" [Network]    : IP " & info.direccionIP & " | MAC " & info.direccionMAC)
-  lblNet.textColor = COLOR_TEXT
-  lblNet.font = fontVal
-  panelHardware.add(lblNet)
-
-  var lblSec = newLabel(" [Security]   : " & info.antivirusEstado)
-  lblSec.textColor = COLOR_GREEN
-  lblSec.font = fontVal
-  panelHardware.add(lblSec)
+  addMetric(panelHardware, " [Hostname]   : " & info.hostname)
+  addMetric(panelHardware, " [OS Version] : " & info.soNombre & " (" & info.soVersion & ")")
+  addMetric(panelHardware, " [Hardware]   : " & info.marcaModelo)
+  addMetric(panelHardware, " [Processor]  : " & info.procesador)
+  addMetric(panelHardware, " [Memory/DSK] : " & info.ramGB & " RAM | " & info.almacenamiento & " Disk")
+  addMetric(panelHardware, " [Network]    : IP " & info.direccionIP & " | MAC " & info.direccionMAC)
+  addMetric(panelHardware, " [Security]   : " & info.antivirusEstado, COLOR_GREEN)
 
   layoutMain.add(panelHardware)
 
   # 5. Sección Formulario Manual
-  var panelForm = newLayoutContainer(LayoutDirection.Vertical)
-  panelForm.spacing = 6
+  var panelForm = newLayoutContainer(Layout_Vertical)
+  panelForm.spacing = 8
+  panelForm.padding = 10
+  panelForm.backgroundColor = COLOR_PANEL
 
   var lblFormTitle = newLabel(">> MANUAL REGISTRATION [INPUT REQUIRED]")
   lblFormTitle.textColor = COLOR_PINK
-  lblFormTitle.font = fontSection
+  lblFormTitle.backgroundColor = COLOR_PANEL
   panelForm.add(lblFormTitle)
 
-  var inputResponsable = newTextBox()
-  inputResponsable.placeholder = "Nombre del Responsable / Usuario..."
-  inputResponsable.font = fontVal
-  panelForm.add(inputResponsable)
+  proc addInput(parent: LayoutContainer, placeholder: string): TextBox =
+    var txt = newTextBox()
+    txt.placeholder = placeholder
+    txt.textColor = COLOR_TEXT
+    txt.backgroundColor = COLOR_BG
+    parent.add(txt)
+    return txt
 
-  var inputDepto = newTextBox()
-  inputDepto.placeholder = "Departamento / Área..."
-  inputDepto.font = fontVal
-  panelForm.add(inputDepto)
-
-  var inputUbicacion = newTextBox()
-  inputUbicacion.placeholder = "Ubicación física (Ej. Sede Central - Piso 3)..."
-  inputUbicacion.font = fontVal
-  panelForm.add(inputUbicacion)
+  var inputResponsable = addInput(panelForm, "Nombre del Responsable / Usuario...")
+  var inputDepto = addInput(panelForm, "Departamento / Área...")
+  var inputUbicacion = addInput(panelForm, "Ubicación física (Ej. Sede Central - Piso 3)...")
 
   layoutMain.add(panelForm)
 
   # Indicador de estado para validación
-  var lblStatus = newLabel(" ")
-  lblStatus.font = fontVal
+  var lblStatus = newLabel(" STATUS: WAITING FOR INPUT...")
+  lblStatus.textColor = COLOR_CYAN
+  lblStatus.backgroundColor = COLOR_BG
   layoutMain.add(lblStatus)
 
   # 6. Botón de Acción
   var btnGuardar = newButton("[ EXECUTE REGISTRATION ]")
-  btnGuardar.font = fontSection
   btnGuardar.textColor = COLOR_BG
   btnGuardar.backgroundColor = COLOR_GREEN
 
@@ -128,9 +108,10 @@ proc renderizarGUI*(info: EquipoInfo) =
       lblStatus.text = " [!] ERROR: Debe completar Responsable y Departamento."
       lblStatus.textColor = COLOR_RED
     else:
-      lblStatus.text = " [OK] Registro procesado exitosamente."
+      lblStatus.text = " [OK] DATA SECURED. INVENTORY UPDATED."
       lblStatus.textColor = COLOR_GREEN
-      echo "Registrando inventario de: ", inputResponsable.text
+      # Opcional: Mostrar popup nativo de confirmación
+      ventana.msgBox("Registro de " & inputResponsable.text & " guardado correctamente.", "CYBER-COLLECTOR")
 
   layoutMain.add(btnGuardar)
 
