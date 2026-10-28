@@ -1,0 +1,56 @@
+name: Build and Publish Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build Windows Binary & Create GitHub Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar entorno Nim
+        uses: jiro4989/setup-nim-action@v2
+        with:
+          nim-version: 'stable'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Instalar dependencias de Nimble
+        run: |
+          nimble install -y nigui
+
+      - name: Compilar binario de Windows (Release Standalone)
+        run: |
+          nim c -d:danger --opt:speed --app:gui -o:inventario_endpoint.exe src/inventario_endpoint.nim
+
+      - name: Publicar Release en GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          files: inventario_endpoint.exe
+          name: "Release ${{ github.ref_name }} — Cyber-Collector"
+          generate_release_notes: true
+          body: |
+            ## 🚀 Versión ${{ github.ref_name }} - Auto-Registro de Inventario de Endpoints
+            
+            ### ✨ Características del Release:
+            - **Consulta Atómica:** Extracción de hardware, red y seguridad vía clases CIM/WMI de Windows en proceso único.
+            - **Interfaz Grafica Cyberpunk/Dracula:** Construida en Nim puro (`NiGui`) sin runtimes ni DLLs externas.
+            - **Portabilidad:** Binario ejecutable único (`.exe`) diseñado para entornos corporativos restringidos.
+            
+            ### 📦 Instrucciones de Ejecución:
+            1. Descarga el archivo `inventario_endpoint.exe` adjunto en los activos (*Assets*) de esta versión.
+            2. Ejecuta el archivo en cualquier máquina con Windows 10 u 11.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
