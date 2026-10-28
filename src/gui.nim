@@ -1,3 +1,5 @@
+# src/gui.nim
+
 import std/strutils
 import nigui
 import config
@@ -15,19 +17,19 @@ const
 proc renderizarGUI*(info: EquipoInfo) =
   app.init()
   
+  # Fuente global segura para mantener el estilo terminal retro
   app.defaultFontFamily = "Consolas"
 
-  # 1. Ventana Principal
+  # 1. Ventana Principal (Sin llamar a ventana.color)
   var ventana = newWindow("[ ENDPOINT INVENTORY // CYBER-COLLECTOR ]")
   ventana.width = 760
   ventana.height = 640
-  # ELIMINADO: ventana.color = COLOR_BG (Window no tiene esta propiedad)
 
-  # 2. Contenedor Principal
+  # 2. Contenedor Principal (Aquí se aplica el fondo base)
   var layoutMain = newLayoutContainer(Layout_Vertical)
   layoutMain.spacing = 15
   layoutMain.padding = 20
-  layoutMain.backgroundColor = COLOR_BG # El color base se aplica aquí al contenedor principal
+  layoutMain.backgroundColor = COLOR_BG 
   ventana.add(layoutMain)
 
   # 3. Header
@@ -106,7 +108,7 @@ proc renderizarGUI*(info: EquipoInfo) =
     else:
       lblStatus.text = " [OK] DATA SECURED. INVENTORY UPDATED."
       lblStatus.textColor = COLOR_GREEN
-      ventana.msgBox("Registro de " & inputResponsable.text & " guardado correctamente.", "CYBER-COLLECTOR")
+      # Eliminado msgBox, la confirmación se hace silenciosa y nativa en lblStatus
 
   layoutMain.add(btnGuardar)
 
