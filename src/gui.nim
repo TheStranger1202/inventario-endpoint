@@ -14,17 +14,17 @@ const
   COLOR_PINK    = rgb(255, 121, 198)  # Accent Pink (#ff79c6)
   COLOR_RED     = rgb(255, 85, 85)    # Dracula Red (#ff5555)
 
-proc agregarFilaKV(parent: LayoutContainer, key: string, val: string, valColor: Color, fontKey, fontVal: Font) =
+proc agregarFilaKV(parent: LayoutContainer, key: string, val: string, valColor: Color) =
   var layoutFila = newLayoutH()
   layoutFila.spacing = 10
 
   var lblKey = newLabel(key)
   lblKey.textColor = COLOR_CYAN
-  lblKey.font = fontKey
+  lblKey.font = newFont("Consolas", 10, true)
 
   var lblVal = newLabel(val)
   lblVal.textColor = valColor
-  lblVal.font = fontVal
+  lblVal.font = newFont("Consolas", 10, false)
 
   layoutFila.add(lblKey)
   layoutFila.add(lblVal)
@@ -35,7 +35,6 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   let fontHeader  = newFont("Consolas", 13, true)
   let fontSection = newFont("Consolas", 11, true)
-  let fontKey     = newFont("Consolas", 10, true)
   let fontVal     = newFont("Consolas", 10, false)
 
   # 1. Ventana Principal
@@ -65,13 +64,13 @@ proc renderizarGUI*(info: EquipoInfo) =
   lblHWTitle.font = fontSection
   panelHardware.add(lblHWTitle)
 
-  panelHardware.agregarFilaKV(" [Hostname]   :", info.hostname, COLOR_TEXT, fontKey, fontVal)
-  panelHardware.agregarFilaKV(" [OS Version] :", info.soNombre & " (" & info.soVersion & ")", COLOR_TEXT, fontKey, fontVal)
-  panelHardware.agregarFilaKV(" [Hardware]   :", info.marcaModelo, COLOR_TEXT, fontKey, fontVal)
-  panelHardware.agregarFilaKV(" [Processor]  :", info.procesador, COLOR_TEXT, fontKey, fontVal)
-  panelHardware.agregarFilaKV(" [Memory/DSK] :", info.ramGB & " RAM | " & info.almacenamiento & " Disk", COLOR_TEXT, fontKey, fontVal)
-  panelHardware.agregarFilaKV(" [Network]    :", "IP: " & info.direccionIP & " | MAC: " & info.direccionMAC, COLOR_TEXT, fontKey, fontVal)
-  panelHardware.agregarFilaKV(" [Security]   :", info.antivirusEstado, COLOR_GREEN, fontKey, fontVal)
+  panelHardware.agregarFilaKV(" [Hostname]   :", info.hostname, COLOR_TEXT)
+  panelHardware.agregarFilaKV(" [OS Version] :", info.soNombre & " (" & info.soVersion & ")", COLOR_TEXT)
+  panelHardware.agregarFilaKV(" [Hardware]   :", info.marcaModelo, COLOR_TEXT)
+  panelHardware.agregarFilaKV(" [Processor]  :", info.procesador, COLOR_TEXT)
+  panelHardware.agregarFilaKV(" [Memory/DSK] :", info.ramGB & " RAM | " & info.almacenamiento & " Disk", COLOR_TEXT)
+  panelHardware.agregarFilaKV(" [Network]    :", "IP: " & info.direccionIP & " | MAC: " & info.direccionMAC, COLOR_TEXT)
+  panelHardware.agregarFilaKV(" [Security]   :", info.antivirusEstado, COLOR_GREEN)
 
   layoutMain.add(panelHardware)
 
@@ -101,7 +100,7 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   layoutMain.add(panelForm)
 
-  # Indicador visual de estado para validación
+  # Indicador visual de estado
   var lblStatus = newLabel(" ")
   lblStatus.font = fontVal
   layoutMain.add(lblStatus)
