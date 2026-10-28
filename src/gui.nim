@@ -1,45 +1,38 @@
-# src/gui.nim
-
 import std/[strutils, json, times]
 import nigui
 import config
 
 const
-  COLOR_BG      = rgb(40, 42, 54)     # Dracula Dark (#282a36)
-  COLOR_TEXT    = rgb(248, 248, 242)  # Foreground Text (#f8f8f2)
-  COLOR_PURPLE  = rgb(189, 147, 249)  # Cyberpunk Purple (#bd93f9)
-  COLOR_CYAN    = rgb(139, 233, 253)  # Retro Cyan (#8be9fd)
-  COLOR_GREEN   = rgb(80, 250, 123)   # Status Green (#50fa7b)
-  COLOR_PINK    = rgb(255, 121, 198)  # Accent Pink (#ff79c6)
-  COLOR_RED     = rgb(255, 85, 85)    # Dracula Red (#ff5555)
+  COLOR_BG      = rgb(40, 42, 54)     # Dracula Dark
+  COLOR_TEXT    = rgb(248, 248, 242)  # Foreground Text
+  COLOR_PURPLE  = rgb(189, 147, 249)  # Cyberpunk Purple
+  COLOR_CYAN    = rgb(139, 233, 253)  # Retro Cyan
+  COLOR_GREEN   = rgb(80, 250, 123)   # Status Green
+  COLOR_PINK    = rgb(255, 121, 198)  # Accent Pink
+  COLOR_RED     = rgb(255, 85, 85)    # Dracula Red
 
 proc renderizarGUI*(info: EquipoInfo) =
   app.init()
-  
   app.defaultFontFamily = "Consolas"
 
-  # 1. Ventana Principal
   var ventana = newWindow("[ ENDPOINT INVENTORY // CYBER-COLLECTOR ]")
   ventana.width = 760
   ventana.height = 680
 
-  # 2. Contenedor Principal
   var layoutMain = newLayoutContainer(Layout_Vertical)
-  layoutMain.widthMode = WidthMode_Fill   # Forzar ancho completo
-  layoutMain.heightMode = HeightMode_Fill # Forzar alto completo
+  layoutMain.widthMode = WidthMode_Fill
+  layoutMain.heightMode = HeightMode_Fill
   layoutMain.spacing = 15
   layoutMain.padding = 20
   layoutMain.backgroundColor = COLOR_BG 
   ventana.add(layoutMain)
 
-  # 3. Header
   var lblHeader = newLabel(" ─── [ SYSTEM METRICS & ENDPOINT AUDIT ] ─── ")
   lblHeader.widthMode = WidthMode_Fill
   lblHeader.textColor = COLOR_PURPLE
   lblHeader.backgroundColor = COLOR_BG
   layoutMain.add(lblHeader)
 
-  # 4. Sección Hardware (Solo Lectura)
   var panelHardware = newLayoutContainer(Layout_Vertical)
   panelHardware.widthMode = WidthMode_Fill
   panelHardware.spacing = 6
@@ -54,7 +47,7 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   proc addMetric(parent: LayoutContainer, text: string) =
     var lbl = newLabel(text)
-    lbl.widthMode = WidthMode_Fill # Evita que el texto se trunque
+    lbl.widthMode = WidthMode_Fill
     lbl.textColor = COLOR_TEXT
     lbl.backgroundColor = COLOR_BG
     parent.add(lbl)
@@ -74,7 +67,6 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   layoutMain.add(panelHardware)
 
-  # 5. Sección Formulario Manual
   var panelForm = newLayoutContainer(Layout_Vertical)
   panelForm.widthMode = WidthMode_Fill
   panelForm.spacing = 8
@@ -89,10 +81,11 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   proc addInput(parent: LayoutContainer, placeholder: string): TextBox =
     var txt = newTextBox()
-    txt.widthMode = WidthMode_Fill # Forzar que los inputs llenen la fila
+    txt.widthMode = WidthMode_Fill
     txt.placeholder = placeholder
-    txt.textColor = COLOR_TEXT
-    txt.backgroundColor = COLOR_BG
+    # FIX UX: Forzar fondo blanco y texto negro para garantizar lectura óptima
+    txt.backgroundColor = rgb(255, 255, 255)
+    txt.textColor = rgb(0, 0, 0)
     parent.add(txt)
     return txt
 
@@ -102,18 +95,15 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   layoutMain.add(panelForm)
 
-  # Indicador de estado para validación
   var lblStatus = newLabel(" STATUS: WAITING FOR INPUT...")
   lblStatus.widthMode = WidthMode_Fill
   lblStatus.textColor = COLOR_CYAN
   lblStatus.backgroundColor = COLOR_BG
   layoutMain.add(lblStatus)
 
-  # 6. Botón de Acción y Lógica de Persistencia JSON
   var btnGuardar = newButton("[ EXECUTE REGISTRATION ]")
   btnGuardar.widthMode = WidthMode_Fill
-  btnGuardar.textColor = COLOR_BG
-  btnGuardar.backgroundColor = COLOR_GREEN
+  # FIX Botón: Dejamos que Windows controle los colores del botón para evitar recuadros rotos
 
   btnGuardar.onClick = proc(event: ClickEvent) =
     let resp = inputResponsable.text.strip()
@@ -156,6 +146,13 @@ proc renderizarGUI*(info: EquipoInfo) =
         lblStatus.textColor = COLOR_RED
 
   layoutMain.add(btnGuardar)
+
+  # FIX Diseño: Espaciador dinámico para rellenar el hueco blanco inferior con el color de fondo
+  var spacer = newLabel("")
+  spacer.widthMode = WidthMode_Fill
+  spacer.heightMode = HeightMode_Fill
+  spacer.backgroundColor = COLOR_BG
+  layoutMain.add(spacer)
 
   ventana.show()
   app.run()

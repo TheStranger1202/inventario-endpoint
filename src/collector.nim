@@ -1,5 +1,3 @@
-# src/collector.nim
-
 import std/[json, strutils]
 import config
 
@@ -38,9 +36,11 @@ when defined(windows):
     """
 
     try:
-      let cmd = "powershell -NoProfile -NoLogo -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command \"" & psCommand.replace("\"", "\\\"").replace("\n", " ") & "\""
-      let (salida, exitCode) = execCmdEx(cmd)
-      if exitCode == 0 and salida.strip().startsWith("{"):
+      # FIX WMI: Usamos execProcess con poHide y pase de argumentos nativos en lugar de un string unificado
+      let args = ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCommand]
+      let salida = execProcess("powershell.exe", args, nil, {poUsePath, poHide, poStdErrToStdOut})
+      
+      if salida.strip().startsWith("{"):
         return salida.strip()
       return ""
     except Exception:
@@ -69,6 +69,6 @@ proc recolectarDatos*(): EquipoInfo =
     except JsonParsingError:
       info.hostname = "Error en formato de datos"
   else:
-    info.hostname = "Error al consultar sistema / SO no compat:"
+    info.hostname = "Error al consultar sistema (Permisos insuficientes)"
 
   return info
