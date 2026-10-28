@@ -36,9 +36,9 @@ when defined(windows):
     """
 
     try:
-      # FIX WMI: Usamos execProcess con poHide y pase de argumentos nativos en lugar de un string unificado
-      let args = ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCommand]
-      let salida = execProcess("powershell.exe", args, nil, {poUsePath, poHide, poStdErrToStdOut})
+      # FIX: Se cambia el nombre a psArgs y se usan parámetros nombrados explícitos (args=..., options=...)
+      let psArgs = ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCommand]
+      let salida = execProcess("powershell.exe", args=psArgs, options={poUsePath, poHide, poStdErrToStdOut})
       
       if salida.strip().startsWith("{"):
         return salida.strip()
