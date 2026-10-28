@@ -36,9 +36,9 @@ when defined(windows):
     """
 
     try:
-      # FIX: Se cambia el nombre a psArgs y se usan parámetros nombrados explícitos (args=..., options=...)
-      let psArgs = ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCommand]
-      let salida = execProcess("powershell.exe", args=psArgs, options={poUsePath, poHide, poStdErrToStdOut})
+      # FIX: Eliminado poHide (no existe en Nim) y añadidos los argumentos de ocultación nativos de PowerShell
+      let psArgs = ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-Command", psCommand]
+      let salida = execProcess("powershell.exe", args=psArgs, options={poUsePath, poStdErrToStdOut})
       
       if salida.strip().startsWith("{"):
         return salida.strip()
