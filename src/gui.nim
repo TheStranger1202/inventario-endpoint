@@ -1,12 +1,11 @@
 # src/gui.nim
 
-import std/strutils
+import std/[strutils, json, times]
 import nigui
 import config
 
 const
   COLOR_BG      = rgb(40, 42, 54)     # Dracula Dark (#282a36)
-  COLOR_PANEL   = rgb(68, 71, 90)     # Panels/Containers (#44475a)
   COLOR_TEXT    = rgb(248, 248, 242)  # Foreground Text (#f8f8f2)
   COLOR_PURPLE  = rgb(189, 147, 249)  # Cyberpunk Purple (#bd93f9)
   COLOR_CYAN    = rgb(139, 233, 253)  # Retro Cyan (#8be9fd)
@@ -17,15 +16,15 @@ const
 proc renderizarGUI*(info: EquipoInfo) =
   app.init()
   
-  # Fuente global segura para mantener el estilo terminal retro
+  # Tipografía global (Retro Consola) sin constructores inestables
   app.defaultFontFamily = "Consolas"
 
-  # 1. Ventana Principal (Sin llamar a ventana.color)
+  # 1. Ventana Principal (Evitando la propiedad inexistente 'color')
   var ventana = newWindow("[ ENDPOINT INVENTORY // CYBER-COLLECTOR ]")
   ventana.width = 760
-  ventana.height = 640
+  ventana.height = 680
 
-  # 2. Contenedor Principal (Aquí se aplica el fondo base)
+  # 2. Contenedor Principal (Fondo base aplicado aquí)
   var layoutMain = newLayoutContainer(Layout_Vertical)
   layoutMain.spacing = 15
   layoutMain.padding = 20
@@ -42,17 +41,17 @@ proc renderizarGUI*(info: EquipoInfo) =
   var panelHardware = newLayoutContainer(Layout_Vertical)
   panelHardware.spacing = 6
   panelHardware.padding = 10
-  panelHardware.backgroundColor = COLOR_PANEL
+  panelHardware.backgroundColor = COLOR_BG
 
   var lblHWTitle = newLabel(">> DETECTED HARDWARE [READ-ONLY]")
   lblHWTitle.textColor = COLOR_CYAN
-  lblHWTitle.backgroundColor = COLOR_PANEL
+  lblHWTitle.backgroundColor = COLOR_BG
   panelHardware.add(lblHWTitle)
 
-  proc addMetric(parent: LayoutContainer, text: string, color: Color = COLOR_TEXT) =
+  proc addMetric(parent: LayoutContainer, text: string) =
     var lbl = newLabel(text)
-    lbl.textColor = color
-    lbl.backgroundColor = COLOR_PANEL
+    lbl.textColor = COLOR_TEXT
+    lbl.backgroundColor = COLOR_BG
     parent.add(lbl)
 
   addMetric(panelHardware, " [Hostname]   : " & info.hostname)
@@ -61,7 +60,11 @@ proc renderizarGUI*(info: EquipoInfo) =
   addMetric(panelHardware, " [Processor]  : " & info.procesador)
   addMetric(panelHardware, " [Memory/DSK] : " & info.ramGB & " RAM | " & info.almacenamiento & " Disk")
   addMetric(panelHardware, " [Network]    : IP " & info.direccionIP & " | MAC " & info.direccionMAC)
-  addMetric(panelHardware, " [Security]   : " & info.antivirusEstado, COLOR_GREEN)
+  
+  var lblSec = newLabel(" [Security]   : " & info.antivirusEstado)
+  lblSec.textColor = COLOR_GREEN
+  lblSec.backgroundColor = COLOR_BG
+  panelHardware.add(lblSec)
 
   layoutMain.add(panelHardware)
 
@@ -69,11 +72,11 @@ proc renderizarGUI*(info: EquipoInfo) =
   var panelForm = newLayoutContainer(Layout_Vertical)
   panelForm.spacing = 8
   panelForm.padding = 10
-  panelForm.backgroundColor = COLOR_PANEL
+  panelForm.backgroundColor = COLOR_BG
 
   var lblFormTitle = newLabel(">> MANUAL REGISTRATION [INPUT REQUIRED]")
   lblFormTitle.textColor = COLOR_PINK
-  lblFormTitle.backgroundColor = COLOR_PANEL
+  lblFormTitle.backgroundColor = COLOR_BG
   panelForm.add(lblFormTitle)
 
   proc addInput(parent: LayoutContainer, placeholder: string): TextBox =
@@ -96,19 +99,51 @@ proc renderizarGUI*(info: EquipoInfo) =
   lblStatus.backgroundColor = COLOR_BG
   layoutMain.add(lblStatus)
 
-  # 6. Botón de Acción
+  # 6. Botón de Acción y Lógica de Persistencia JSON
   var btnGuardar = newButton("[ EXECUTE REGISTRATION ]")
   btnGuardar.textColor = COLOR_BG
   btnGuardar.backgroundColor = COLOR_GREEN
 
   btnGuardar.onClick = proc(event: ClickEvent) =
-    if inputResponsable.text.strip().len == 0 or inputDepto.text.strip().len == 0:
+    let resp = inputResponsable.text.strip()
+    let depto = inputDepto.text.strip()
+    let ubi = inputUbicacion.text.strip()
+
+    if resp.len == 0 or depto.len == 0:
       lblStatus.text = " [!] ERROR: Debe completar Responsable y Departamento."
       lblStatus.textColor = COLOR_RED
     else:
-      lblStatus.text = " [OK] DATA SECURED. INVENTORY UPDATED."
-      lblStatus.textColor = COLOR_GREEN
-      # Eliminado msgBox, la confirmación se hace silenciosa y nativa en lblStatus
+      try:
+        # Generación del archivo JSON de respaldo
+        let payload = %*{
+          "timestamp": now().format("yyyy-MM-dd HH:mm:ss"),
+          "hardware": {
+            "hostname": info.hostname,
+            "soNombre": info.soNombre,
+            "soVersion": info.soVersion,
+            "marcaModelo": info.marcaModelo,
+            "procesador": info.procesador,
+            "ramGB": info.ramGB,
+            "almacenamiento": info.almacenamiento,
+            "direccionIP": info.direccionIP,
+            "direccionMAC": info.direccionMAC,
+            "antivirusEstado": info.antivirusEstado
+          },
+          "asignacion": {
+            "responsable": resp,
+            "departamento": depto,
+            "ubicacion": ubi
+          }
+        }
+        
+        let nombreArchivo = "inventario_" & info.hostname & ".json"
+        writeFile(nombreArchivo, payload.pretty())
+        
+        lblStatus.text = " [OK] DATA SECURED & EXPORTED TO " & nombreArchivo
+        lblStatus.textColor = COLOR_GREEN
+      except Exception as e:
+        lblStatus.text = " [!] FILESYSTEM ERROR: " & e.msg
+        lblStatus.textColor = COLOR_RED
 
   layoutMain.add(btnGuardar)
 
