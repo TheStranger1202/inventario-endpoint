@@ -12,9 +12,9 @@ const
   COLOR_CYAN    = rgb(139, 233, 253)  # Retro Cyan (#8be9fd)
   COLOR_GREEN   = rgb(80, 250, 123)   # Status Green (#50fa7b)
   COLOR_PINK    = rgb(255, 121, 198)  # Accent Pink (#ff79c6)
+  COLOR_RED     = rgb(255, 85, 85)    # Dracula Red (#ff5555)
 
 proc agregarFilaKV(parent: LayoutContainer, key: string, val: string, valColor: Color, fontKey, fontVal: Font) =
-  ## Auxiliar de maquetación para filas Clave-Valor alineadas
   var layoutFila = newLayoutH()
   layoutFila.spacing = 10
 
@@ -33,7 +33,6 @@ proc agregarFilaKV(parent: LayoutContainer, key: string, val: string, valColor: 
 proc renderizarGUI*(info: EquipoInfo) =
   app.init()
 
-  # Reuso eficiente de objetos Font (Evita fugas de recursos GDI en Windows)
   let fontHeader  = newFont("Consolas", 13, true)
   let fontSection = newFont("Consolas", 11, true)
   let fontKey     = newFont("Consolas", 10, true)
@@ -42,22 +41,22 @@ proc renderizarGUI*(info: EquipoInfo) =
   # 1. Ventana Principal
   var ventana = newWindow("[ ENDPOINT INVENTORY // CYBER-COLLECTOR ]")
   ventana.width = 760
-  ventana.height = 580
+  ventana.height = 600
   ventana.color = COLOR_BG
 
-  # 2. Contenedor Principal (Vertical)
+  # 2. Contenedor Principal
   var layoutMain = newLayoutV()
   layoutMain.spacing = 14
   layoutMain.padding = 16
   ventana.add(layoutMain)
 
-  # 3. Banner / Header Retro
+  # 3. Header
   var lblHeader = newLabel(" ─── [ SYSTEM METRICS & ENDPOINT AUDIT ] ─── ")
   lblHeader.textColor = COLOR_PURPLE
   lblHeader.font = fontHeader
   layoutMain.add(lblHeader)
 
-  # 4. Sección Hardware (Solo Lectura)
+  # 4. Sección Hardware
   var panelHardware = newLayoutV()
   panelHardware.spacing = 4
 
@@ -76,7 +75,7 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   layoutMain.add(panelHardware)
 
-  # 5. Sección Formulario Manual (Inputs)
+  # 5. Sección Formulario
   var panelForm = newLayoutV()
   panelForm.spacing = 6
 
@@ -102,7 +101,12 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   layoutMain.add(panelForm)
 
-  # 6. Botón de Acción con Validación Defensiva
+  # Indicador visual de estado para validación
+  var lblStatus = newLabel(" ")
+  lblStatus.font = fontVal
+  layoutMain.add(lblStatus)
+
+  # 6. Botón de Acción
   var btnGuardar = newButton("[ EXECUTE REGISTRATION ]")
   btnGuardar.font = fontSection
   btnGuardar.textColor = COLOR_BG
@@ -110,10 +114,11 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   btnGuardar.onClick = proc(event: ClickEvent) =
     if inputResponsable.text.strip().len == 0 or inputDepto.text.strip().len == 0:
-      var dlgError = newWindow("Error de Validación")
-      dlgError.alert("Por favor complete los campos obligatorios: Responsable y Departamento.")
+      lblStatus.text = " [!] ERROR: Debe completar Responsable y Departamento."
+      lblStatus.textColor = COLOR_RED
     else:
-      # Lógica para procesar o guardar el inventario
+      lblStatus.text = " [OK] Registro procesado exitosamente."
+      lblStatus.textColor = COLOR_GREEN
       echo "Registrando inventario de: ", inputResponsable.text
 
   layoutMain.add(btnGuardar)
