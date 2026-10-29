@@ -13,8 +13,8 @@ Construida en **Nim** con el framework nativo **NiGui**, la aplicación realiza 
 
 ## ✨ Características Principales
 
-* **Extracción Atómica $O(1)$:** Realiza consultas consolidadas vía PowerShell/CIM en un único subproceso, minimizando la latencia de análisis.
-* **Interfaz Retro-Cyberpunk:** GUI basada en NiGui con tipografía monoespaciada *Consolas*, paleta Dracula y validación defensiva de entradas.
+* **Extracción Atómica en Segundo Plano:** Ejecuta consultas consolidadas vía PowerShell con flags de ocultación nativos (`-WindowStyle Hidden`), evitando destellos de consola.
+* **Interfaz Retro-Cyberpunk Adaptativa:** GUI basada en NiGui con tipografía monoespaciada *Consolas*, paleta Dracula, ajuste dinámico de contenedores (`WidthMode_Fill` / `HeightMode_Fill`) e inputs de alto contraste.
 * **Persistencia JSON Directa:** Exporta automáticamente los datos recolectados e ingresados en el archivo `inventario_<HOSTNAME>.json` con marca de tiempo.
 * **Standalone / Zero Dependencies:** Produce un único archivo binario `.exe` portable ideal para entornos corporativos o de alta restricción.
 * **Manejo Defensivo de Errores:** Resiliente ante variaciones de permisos de usuario o adaptadores de red inactivos gracias al parseo seguro de estructuras JSON.
