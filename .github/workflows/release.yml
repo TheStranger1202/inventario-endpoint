@@ -25,6 +25,11 @@ jobs:
           nim-version: 'stable'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Instalar cliente de PostgreSQL en Windows (libpq)
+        run: |
+          choco install postgresql15 --force --no-progress
+          echo "C:\Program Files\PostgreSQL\15\bin" >> $env:GITHUB_PATH
+
       - name: Instalar dependencias de Nimble
         run: |
           nimble install -y nigui
@@ -33,23 +38,36 @@ jobs:
         run: |
           nim c -d:danger --opt:speed --passL:-mwindows -o:inventario_endpoint.exe src/inventario_endpoint.nim
 
+      - name: Empaquetar ejecutable y DLLs necesarias
+        run: |
+          mkdir dist
+          copy inventario_endpoint.exe dist\
+          copy "C:\Program Files\PostgreSQL\15\bin\libpq.dll" dist\
+          copy "C:\Program Files\PostgreSQL\15\bin\libcrypto-3-x64.dll" dist\ || true
+          copy "C:\Program Files\PostgreSQL\15\bin\libssl-3-x64.dll" dist\ || true
+          copy "C:\Program Files\PostgreSQL\15\bin\libintl-8.dll" dist\ || true
+          copy "C:\Program Files\PostgreSQL\15\bin\libiconv-2.dll" dist\ || true
+          Compress-Archive -Path dist\* -DestinationPath inventario_endpoint_windows.zip
+
       - name: Publicar Release en GitHub
         uses: softprops/action-gh-release@v2
         with:
-          files: inventario_endpoint.exe
+          files: inventario_endpoint_windows.zip
           name: "Release ${{ github.ref_name }} — Cyber-Collector"
           generate_release_notes: true
           body: |
             ## 🚀 Versión ${{ github.ref_name }} - Auto-Registro de Inventario de Endpoints
             
             ### ✨ Características del Release:
-            - **Consulta Atómica:** Extracción de hardware, red y seguridad vía clases CIM/WMI de Windows en proceso único.
-            - **Interfaz Gráfica Cyberpunk/Dracula:** Construida en Nim puro (`NiGui`) sin runtimes ni DLLs externas.
-            - **Portabilidad:** Binario ejecutable único (`.exe`) diseñado para entornos corporativos restringidos.
+            - **Consulta Atómica:** Extracción de hardware, red y seguridad vía clases CIM/WMI de Windows.
+            - **Persistencia Híbrida TCP:** Registro directo en PostgreSQL corporativo con respaldo local JSON en caso de fallos de red.
+            - **Interfaz Gráfica Cyberpunk/Dracula:** Construida en Nim puro (`NiGui`).
+            - **Portabilidad:** Incluye DLLs nactivas de PostgreSQL para ejecución directa en Windows 10/11 sin instalaciones adicionales.
             
             ### 📦 Instrucciones de Ejecución:
-            1. Descarga el archivo `inventario_endpoint.exe` adjunto en los activos (*Assets*) de esta versión.
-            2. Ejecuta el archivo en cualquier máquina con Windows 10 u 11.
+            1. Descarga y descomprime `inventario_endpoint_windows.zip`.
+            2. Asegúrate de colocar el archivo `.env` configurado en la misma carpeta extraída.
+            3. Ejecuta `inventario_endpoint.exe`.
           draft: false
           prerelease: false
         env:
