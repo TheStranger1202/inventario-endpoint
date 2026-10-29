@@ -1,6 +1,7 @@
 import std/[strutils, json, times]
 import nigui
 import config
+import db # <- Módulo de persistencia TCP agregado
 
 const
   COLOR_BG      = rgb(40, 42, 54)     # Dracula Dark
@@ -83,7 +84,6 @@ proc renderizarGUI*(info: EquipoInfo) =
     var txt = newTextBox()
     txt.widthMode = WidthMode_Fill
     txt.placeholder = placeholder
-    # FIX UX: Forzar fondo blanco y texto negro para garantizar lectura óptima
     txt.backgroundColor = rgb(255, 255, 255)
     txt.textColor = rgb(0, 0, 0)
     parent.add(txt)
@@ -103,7 +103,6 @@ proc renderizarGUI*(info: EquipoInfo) =
 
   var btnGuardar = newButton("[ EXECUTE REGISTRATION ]")
   btnGuardar.widthMode = WidthMode_Fill
-  # FIX Botón: Dejamos que Windows controle los colores del botón para evitar recuadros rotos
 
   btnGuardar.onClick = proc(event: ClickEvent) =
     let resp = inputResponsable.text.strip()
@@ -136,18 +135,26 @@ proc renderizarGUI*(info: EquipoInfo) =
           }
         }
         
+        # 1. Respaldo Local Garantizado
         let nombreArchivo = "inventario_" & info.hostname & ".json"
         writeFile(nombreArchivo, payload.pretty())
         
-        lblStatus.text = " [OK] DATA SECURED & EXPORTED TO " & nombreArchivo
-        lblStatus.textColor = COLOR_GREEN
+        # 2. Intento de Exportación remota vía TCP a PostgreSQL
+        let (exitoBD, msjBD) = enviarAPostgresTCP(payload)
+
+        if exitoBD:
+          lblStatus.text = " [OK] DATA EXPORTED TO POSTGRESQL & " & nombreArchivo
+          lblStatus.textColor = COLOR_GREEN
+        else:
+          lblStatus.text = " [OK] SAVED LOCALLY (BD OFFLINE: " & msjBD & ")"
+          lblStatus.textColor = COLOR_CYAN
+
       except Exception as e:
         lblStatus.text = " [!] FILESYSTEM ERROR: " & e.msg
         lblStatus.textColor = COLOR_RED
 
   layoutMain.add(btnGuardar)
 
-  # FIX Diseño: Espaciador dinámico para rellenar el hueco blanco inferior con el color de fondo
   var spacer = newLabel("")
   spacer.widthMode = WidthMode_Fill
   spacer.heightMode = HeightMode_Fill
