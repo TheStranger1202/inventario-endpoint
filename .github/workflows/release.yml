@@ -25,12 +25,10 @@ jobs:
           nim-version: 'stable'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Descargar libpq y DLLs de PostgreSQL (Rápido - Sin Chocolatey)
+      - name: Instalar cliente de PostgreSQL en Windows (libpq)
         run: |
-          Invoke-WebRequest -Uri "https://github.com/microsoft/winget-pkgs/releases/download/v1.0/dummy" -OutFile "dummy.txt" -ErrorAction SilentlyContinue
-          # Descargamos directamente libpq.dll y sus librerías livianas
-          mkdir C:\pq_bin
-          curl.exe -sSL -o C:\pq_bin\libpq.dll https://raw.githubusercontent.com/postgresql/postgres/master/src/interfaces/libpq/win32.def -ErrorAction SilentlyContinue
+          choco install postgresql15 --force --no-progress
+          echo "C:\Program Files\PostgreSQL\15\bin" >> $env:GITHUB_PATH
 
       - name: Instalar dependencias de Nimble
         run: |
@@ -46,19 +44,23 @@ jobs:
             -d:compiledName="${{ secrets.DB_NAME }}" `
             -o:inventario_endpoint.exe src/inventario_endpoint.nim
 
-      - name: Empaquetar ejecutable y DLLs de MinGW/Runtime
+      - name: Empaquetar ejecutable y DLLs necesarias
         run: |
           New-Item -ItemType Directory -Force -Path dist
           Copy-Item inventario_endpoint.exe -Destination dist\
           
-          # Copiar DLLs del compilador GCC/MinGW
+          # DLLs de PostgreSQL
+          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libpq.dll" -Destination dist\
+          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libcrypto-3-x64.dll" -Destination dist\ -ErrorAction SilentlyContinue
+          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libssl-3-x64.dll" -Destination dist\ -ErrorAction SilentlyContinue
+          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libintl-8.dll" -Destination dist\ -ErrorAction SilentlyContinue
+          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libiconv-2.dll" -Destination dist\ -ErrorAction SilentlyContinue
+
+          # Runtime de MinGW / GCC (Requerido por Nim/NiGui)
           $gccBin = Split-Path (Get-Command gcc).Source
           Copy-Item "$gccBin\libwinpthread-1.dll" -Destination dist\ -ErrorAction SilentlyContinue
           Copy-Item "$gccBin\libgcc_s_seh-1.dll" -Destination dist\ -ErrorAction SilentlyContinue
           Copy-Item "$gccBin\libstdc++-6.dll" -Destination dist\ -ErrorAction SilentlyContinue
-
-          # Si existen DLLs en el sistema, adjuntarlas
-          Get-ChildItem -Path "C:\Program Files\PostgreSQL" -Filter "libpq.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 | Copy-Item -Destination dist\ -ErrorAction SilentlyContinue
 
           Compress-Archive -Path dist\* -DestinationPath inventario_endpoint_windows.zip
 
@@ -68,5 +70,19 @@ jobs:
           files: inventario_endpoint_windows.zip
           name: "Release ${{ github.ref_name }} — Cyber-Collector"
           generate_release_notes: true
+          body: |
+            ## 🚀 Versión ${{ github.ref_name }} - Auto-Registro de Inventario de Endpoints
+            
+            ### ✨ Características del Release:
+            - **Consulta Atómica:** Extracción de hardware, red y seguridad vía clases CIM/WMI de Windows.
+            - **Persistencia Híbrida TCP:** Registro directo en PostgreSQL corporativo con respaldo local JSON.
+            - **Interfaz Gráfica Cyberpunk/Dracula:** Construida en Nim puro (`NiGui`).
+            - **Portabilidad Standalone:** Credenciales e incluyen runtime DLLs de MinGW y PostgreSQL.
+            
+            ### 📦 Instrucciones de Ejecución:
+            1. Descarga y descomprime `inventario_endpoint_windows.zip`.
+            2. Ejecuta `inventario_endpoint.exe` en cualquier máquina con Windows 10 u 11.
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
