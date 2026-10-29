@@ -44,19 +44,15 @@ jobs:
             -d:compiledName="${{ secrets.DB_NAME }}" `
             -o:inventario_endpoint.exe src/inventario_endpoint.nim
 
-      - name: Empaquetar ejecutable y DLLs necesarias
+      - name: Empaquetar ejecutable y TODAS las DLLs necesarias
         run: |
           New-Item -ItemType Directory -Force -Path dist
           Copy-Item inventario_endpoint.exe -Destination dist\
           
-          # DLLs de PostgreSQL
-          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libpq.dll" -Destination dist\
-          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libcrypto-3-x64.dll" -Destination dist\ -ErrorAction SilentlyContinue
-          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libssl-3-x64.dll" -Destination dist\ -ErrorAction SilentlyContinue
-          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libintl-8.dll" -Destination dist\ -ErrorAction SilentlyContinue
-          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libiconv-2.dll" -Destination dist\ -ErrorAction SilentlyContinue
+          # Copiar libpq.dll y TODAS las DLLs de soporte de PostgreSQL (incluye libintl-8.dll, libiconv-2.dll, libssl, libcrypto)
+          Copy-Item "C:\Program Files\PostgreSQL\15\bin\*.dll" -Destination dist\ -ErrorAction SilentlyContinue
 
-          # Runtime de MinGW / GCC (Requerido por Nim/NiGui)
+          # Copiar Runtime de MinGW / GCC (Requerido por Nim/NiGui)
           $gccBin = Split-Path (Get-Command gcc).Source
           Copy-Item "$gccBin\libwinpthread-1.dll" -Destination dist\ -ErrorAction SilentlyContinue
           Copy-Item "$gccBin\libgcc_s_seh-1.dll" -Destination dist\ -ErrorAction SilentlyContinue
@@ -77,7 +73,7 @@ jobs:
             - **Consulta Atómica:** Extracción de hardware, red y seguridad vía clases CIM/WMI de Windows.
             - **Persistencia Híbrida TCP:** Registro directo en PostgreSQL corporativo con respaldo local JSON.
             - **Interfaz Gráfica Cyberpunk/Dracula:** Construida en Nim puro (`NiGui`).
-            - **Portabilidad Standalone:** Credenciales e incluyen runtime DLLs de MinGW y PostgreSQL.
+            - **Portabilidad Standalone:** Paquete autosuficiente con runtime DLLs de MinGW y librerías completas de PostgreSQL.
             
             ### 📦 Instrucciones de Ejecución:
             1. Descarga y descomprime `inventario_endpoint_windows.zip`.
