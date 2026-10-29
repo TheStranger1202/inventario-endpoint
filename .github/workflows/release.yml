@@ -32,7 +32,7 @@ jobs:
 
       - name: Instalar dependencias de Nimble
         run: |
-          nimble install -y nigui
+          nimble install -y nigui db_connector
 
       - name: Compilar binario de Windows (Release Standalone con credenciales inyectadas)
         run: |
@@ -46,13 +46,13 @@ jobs:
 
       - name: Empaquetar ejecutable y DLLs necesarias
         run: |
-          mkdir dist
-          copy inventario_endpoint.exe dist\
-          copy "C:\Program Files\PostgreSQL\15\bin\libpq.dll" dist\
-          copy "C:\Program Files\PostgreSQL\15\bin\libcrypto-3-x64.dll" dist\ || true
-          copy "C:\Program Files\PostgreSQL\15\bin\libssl-3-x64.dll" dist\ || true
-          copy "C:\Program Files\PostgreSQL\15\bin\libintl-8.dll" dist\ || true
-          copy "C:\Program Files\PostgreSQL\15\bin\libiconv-2.dll" dist\ || true
+          New-Item -ItemType Directory -Force -Path dist
+          Copy-Item inventario_endpoint.exe -Destination dist\
+          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libpq.dll" -Destination dist\
+          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libcrypto-3-x64.dll" -Destination dist\ -ErrorAction SilentlyContinue
+          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libssl-3-x64.dll" -Destination dist\ -ErrorAction SilentlyContinue
+          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libintl-8.dll" -Destination dist\ -ErrorAction SilentlyContinue
+          Copy-Item "C:\Program Files\PostgreSQL\15\bin\libiconv-2.dll" -Destination dist\ -ErrorAction SilentlyContinue
           Compress-Archive -Path dist\* -DestinationPath inventario_endpoint_windows.zip
 
       - name: Publicar Release en GitHub

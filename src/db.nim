@@ -1,4 +1,5 @@
-import std/[db_postgres, json, strutils, os, parsecfg]
+import db_connector/db_postgres
+import std/[json, strutils, os, parsecfg]
 import config
 
 # Inyección en tiempo de compilación (vía banderas -d:variable)
